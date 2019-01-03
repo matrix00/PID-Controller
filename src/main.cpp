@@ -3,6 +3,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include <math.h>
+#include <queue>
 
 // for convenience
 using json = nlohmann::json;
@@ -26,6 +27,50 @@ std::string hasData(std::string s) {
     return s.substr(b1, b2 - b1 + 1);
   }
   return "";
+}
+
+void Twiddle(PID& pid)
+{
+
+	double p[] = {pid.Kp, pid.Kd, pid.Ki};
+	double dp[] = {1, 1, 1};
+  double best_err = pid.p_error;
+	int it=0;
+
+	while ((dp[0]+dp[1]+dp[2]) > 0.0001)
+	{
+		for (int i=0; i < 3; i++)
+		{
+			p[i] += dp[i];
+			// need to do something x_trajectory, y_trajectory, err = run(robot, p)
+
+			double err = 1;// need to find out
+			if (err < best_err)
+     	{
+				best_err = err;
+				dp[i] *= 1.1;
+			}
+			else
+			{
+				p[i] -= 2*dp[i];
+				//x_trajectory, y_trajectory, err = run(robot, p)
+        if (err < best_err)
+				{
+					best_err = err;
+					dp[i] *= 1.1;
+				}
+				else
+				{
+					p[i] += dp[i];
+					dp[i] *= 0.9;
+				}
+			}
+			it +=1;
+		}
+		pid.Kp = p[0];
+		pid.Kd = p[1];
+		pid.Ki = p[2]; 
+	}
 }
 
 int main()
@@ -53,7 +98,6 @@ int main()
           double speed = std::stod(j[1]["speed"].get<std::string>());
           double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value;
-
 
 
           /*
