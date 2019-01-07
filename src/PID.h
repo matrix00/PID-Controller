@@ -1,6 +1,8 @@
 #ifndef PID_H
 #define PID_H
 
+#include <queue>
+
 class PID {
 public:
   /*
@@ -9,6 +11,13 @@ public:
   double p_error;
   double i_error;
   double d_error;
+
+	double dp[3] = {1, 1, 1};
+  double p[3];
+  double best_err;// = std::numeric_limits<double>::max();
+	std::queue<double> errQ; 
+
+	bool converged;
 
   /*
   * Coefficients
@@ -41,6 +50,9 @@ public:
   * Calculate the total PID error.
   */
   double TotalError();
+
+	//update co-efficient using Twiddle logic
+	void updateParamWithTwiddle();
 };
 
 #endif /* PID_H */
