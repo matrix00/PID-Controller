@@ -36,60 +36,15 @@ std::string hasData(std::string s) {
   return "";
 }
 
-void Twiddle(PID& pid)
-{
-
-	double p[] = {pid.Kp, pid.Kd, pid.Ki};
-	double dp[] = {1, 1, 1};
-  double best_err = pid.p_error;
-	int it=0;
-
-	while ((dp[0]+dp[1]+dp[2]) > 0.0001)
-	{
-		for (int i=0; i < 3; i++)
-		{
-			p[i] += dp[i];
-			// need to do something x_trajectory, y_trajectory, err = run(robot, p)
-
-			double err = 1;// need to find out
-			if (err < best_err)
-     	{
-				best_err = err;
-				dp[i] *= 1.1;
-			}
-			else
-			{
-				p[i] -= 2*dp[i];
-				//x_trajectory, y_trajectory, err = run(robot, p)
-        if (err < best_err)
-				{
-					best_err = err;
-					dp[i] *= 1.1;
-				}
-				else
-				{
-					p[i] += dp[i];
-					dp[i] *= 0.9;
-				}
-			}
-			it +=1;
-		}
-		pid.Kp = p[0];
-		pid.Kd = p[1];
-		pid.Ki = p[2]; 
-	}
-}
-
 int main()
 {
   uWS::Hub h;
+//	PID pidSteering;
 
   // TODO: Initialize the pid variable.
 
-	pidSteering.Init(0.2, 0.004, 3.0);
-	//pidSteering.Init(0.1, 0.001, 2.8);
-	pidThrottle.Init(0.4, 0.0001, 0.6);
-	//pid.Init(2.9, 0.49, 10.3);
+	pidSteering.Init(0.2, 0.003, 3.0);
+	pidThrottle.Init(0.4, 0.000, 0.5);
 
 
   h.onMessage([&pidSteering](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -105,8 +60,8 @@ int main()
         if (event == "telemetry") {
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<std::string>());
-          double speed = std::stod(j[1]["speed"].get<std::string>());
-          double angle = std::stod(j[1]["steering_angle"].get<std::string>());
+          //double speed = std::stod(j[1]["speed"].get<std::string>());
+          //double angle = std::stod(j[1]["steering_angle"].get<std::string>());
           double steer_value;
 
 
@@ -128,7 +83,7 @@ int main()
 					double throttle= min(maxSpeed -pidThrottle.Kp * cte - pidThrottle.Kd * pidThrottle.d_error - pidThrottle.Ki * pidThrottle.i_error,maxSpeed);
 
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " d error " << pidSteering.d_error << " i error " << pidSteering.i_error << " Throttle " << throttle << std::endl;
+//          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << " d error " << pidSteering.d_error << " i error " << pidSteering.i_error << " Throttle " << throttle << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
